@@ -15,8 +15,8 @@ export class UsersController {
     // @DELETE
 
     @Get()
-    findAll(@Query('dep') dep?: usersEntity.UserRole) {
-        return this.userService.findAll(dep)
+    findAll(@Query('dep') dep?: usersEntity.UserRole,@Query('email') email?: string) {
+        return this.userService.findAll(dep, email)
     }
 
     @Get(':id')
@@ -34,6 +34,11 @@ export class UsersController {
         return this.userService.update(+id, userUpdate)
     }
 
+    @Delete()
+    deletedomain(@Query('domain') domain: string) {
+        return this.userService.deletedomain(domain)
+    }
+        
     @Delete(':id')
     delete(@Param('id') id: string) {
         return this.userService.delete(+id)

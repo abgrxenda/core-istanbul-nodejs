@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { console } from 'inspector';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like } from 'typeorm';
 import * as usersEntity from './users.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 
 
 @Injectable()
 export class UsersService {
-
     constructor(@InjectRepository(usersEntity.Users) private userRepo: Repository<usersEntity.Users>) { }
+    // constructor(@InjectRepository(usersEntity.Users) private userRepo: Repository<usersEntity.Users>) { }
 
     // findAll(dep?: string, email?: string) {
     //     if (dep) {
@@ -22,13 +22,28 @@ export class UsersService {
     //     return this.users
     // }
 
-    async findAll(dep?: usersEntity.UserRole) {
-        if (dep) {
-            return this.userRepo.find({
-                where: { role: dep },
-            });
+    async findAll(dep?: usersEntity.UserRole, email?: string) {
+
+        if (dep && email) {
+            const result = await this.userRepo.find({ where: { role: dep, email: email, } });
+            const errorresult = { error: 'No user found' };
+            return !result.length ? errorresult : result;
         }
-        return this.userRepo.find();
+        if (dep) {
+            const result = await this.userRepo.find({ where: { role: dep } });
+            const errorresult = { error: 'No user found' };
+            return !result.length ? errorresult : result;
+        }
+        if (email) {
+            const result = await this.userRepo.find({ where: { email: email } });
+            const errorresult = { error: 'No user found' };
+
+            return !result.length ? errorresult : result;
+        }
+        const result = await this.userRepo.find();
+        const errorresult = { error: 'No user found' };
+
+        return !result.length ? errorresult : result;
     }
 
     // findOne(id: number) {
@@ -38,8 +53,9 @@ export class UsersService {
     async findOne(id: number) {
         const existingUser = await this.userRepo.findOneBy({ id });
         if (!existingUser) {
-            const findUser = { error: 'User Not Found' }
+            const findUser = { id: id, error: 'User Not Found' }
             return findUser
+            // throw new Error("User Not Found");
         }
         return this.userRepo.findOneBy({ id });
     }
@@ -54,7 +70,7 @@ export class UsersService {
     //     return newUser
     // }
 
-
+    // Not using DTO because we define the sqlite database in entity file
     async create(user: usersEntity.Users) {
 
         const existingUser = await this.userRepo.findOneBy({ email: user.email });
@@ -83,6 +99,7 @@ export class UsersService {
 
     async update(id: number, user: Partial<usersEntity.Users>) {
         const existUser = await this.userRepo.findOneBy({ id });
+        // const existingDomain = await this.userRepo.find({ where: { email: Like(`%${domain}%`), } });
         if (!existUser) {
             const findUser = { error: 'User Not Found' }
             return findUser
@@ -102,11 +119,29 @@ export class UsersService {
 
     // }
 
-    async delete(id: number) {
-        const deleteUser = await this.userRepo.delete({ id });
-        if (deleteUser.affected === 0) {
-            throw new Error(`User id: '${id}' was not deleted `);
+    async deletedomain(domain: string) {
+        const existingDomain = await this.userRepo.find({ where: { email: Like(`%${domain}%`), } });
+        if (!existingDomain.length) {
+            const errorUser = { error: 'User Not Found' }
+            return errorUser
         }
+        // how to affect more than one record based on criteria
+        const deletedDomain = await this.userRepo.delete(existingDomain.map(user=> user.id))
+        return {...existingDomain, result: deletedDomain.affected };
+    }
+
+    async delete(id: number) {
+        const existUser = await this.userRepo.findOneBy({ id });
+        if (!existUser) {
+            const errorUser = { error: 'User Not Found' }
+            return errorUser
+
+        }
+        const deleteUser = await this.userRepo.delete({ id });
+        return { result: deleteUser.affected };
+        // if (deleteUser.affected === 0) {
+        //     throw new Error(`User id: '${id}' was not deleted `);
+        // }
     }
 
 }

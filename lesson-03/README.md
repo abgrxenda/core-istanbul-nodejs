@@ -76,6 +76,20 @@ Create `ormconfig.json`:
 }
 ```
 
+```json
+{
+  "type": "mysql",
+  "host": "localhost",
+  "port": 3306,
+  "username": "nestuser",
+  "password": "nestpass",
+  "database": "nestjs_db",
+  "entities": ["dist/**/*.entity{.ts,.js}"],
+  "synchronize": true,
+  "logging": true
+}
+```
+
 ---
 
 ## 🧪 Running the App
