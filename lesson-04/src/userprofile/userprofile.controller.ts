@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { UserprofileService } from './userprofile.service';
 import { CreateUserprofileDto } from './dto/create-userprofile.dto';
 import { UpdateUserprofileDto } from './dto/update-userprofile.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('userprofile')
+@UseGuards(AuthGuard('jwt'))
 export class UserprofileController {
   constructor(private readonly userprofileService: UserprofileService) {}
 

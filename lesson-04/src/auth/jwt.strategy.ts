@@ -14,10 +14,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(user: any) {
-    const validateUser = await this.usersService.findOne(user.email);
+    const validateUser = await this.usersService.findByEmail(user.email);
     if (!validateUser) {
       throw new UnauthorizedException('User Not Fonund');
     }
-    return validateUser;
+    return validateUser[0];
   }
 }
